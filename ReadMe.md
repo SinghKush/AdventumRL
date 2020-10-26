@@ -28,8 +28,8 @@ AdventumRL is an API framework that allows for complex, mission-based reinforcem
 3. Download the latest release of [AdventumRL ](https://github.gatech.edu/kxiao36/Malmo_Grammar) and place the files into the same folder as the Malmo release from before
 4. Install the following pip modules: Textworld, Nose, PyTorch, and TKinter
    - Linux
-     - `sudo pip3 install nose textworld torch`
-     - `sudo apt-get install python3-tk`
+     - `sudo pip3 install nose textworld==1.1.0 torch matplotlib`
+     - `sudo apt-get install python3-tk python-opencv`
 5. In one terminal, go to the `Minecraft` folder and launch the client
    - `sudo ./launchClient.sh`
 6. In a second terminal, go to the `Grammar_Demo` folder and run the `grammar_api.py`  file

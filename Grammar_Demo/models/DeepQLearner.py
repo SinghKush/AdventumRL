@@ -3,6 +3,7 @@ import random as rand
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import os
 #from collections import deque
 
@@ -65,7 +66,7 @@ class CNN(nn.Module):
 class DeepQLearner(object):
 
     def __init__(self, \
-        input_size = 4, \
+        input_size = 31, \
         num_actions = 2, \
         alpha = 0.2, \
         discount_factor = 0.5, \
@@ -155,11 +156,11 @@ class DeepQLearner(object):
         self.policy_net.eval()
         with torch.no_grad():
             if self.camera:
-                next_output = self.policy_net(torch.Tensor([s_prime[0]]).to(self.device), torch.Tensor([s_prime[1]]).to(self.device))
+                next_output = self.policy_net(torch.Tensor([next_state[0]]).to(self.device), torch.Tensor([next_state[1]]).to(self.device))
             else:
-                next_output = self.policy_net(torch.Tensor([s_prime]).to(self.device))
+                next_output = self.policy_net(torch.Tensor([next_state]).to(self.device))
             
-            next_output = self.policy_net(torch.Tensor([next_state]).to(self.device))
+            # next_output = self.policy_net(torch.Tensor([next_state]).to(self.device))
             if self.verbose: print("model output: ", next_output)
             next_output_Q, next_output_action = torch.max(next_output.data, 1)
             next_action = next_output_action[0].item()
@@ -168,9 +169,9 @@ class DeepQLearner(object):
         # set 
         self.policy_net.train()
         if self.camera:
-            output = self.policy_net(torch.Tensor([self.s[0]]).to(self.device), torch.Tensor([self.s[1]]).to(self.device))
+            output = self.policy_net(torch.Tensor([self.state[0]]).to(self.device), torch.Tensor([self.state[1]]).to(self.device))
         else:
-            output = self.policy_net(torch.Tensor([self.s]).to(self.device))
+            output = self.policy_net(torch.Tensor([self.state]).to(self.device))
         output_Q, output_action = torch.max(output.data, 1)
         label = torch.Tensor()
         label.data = output.clone()
@@ -180,7 +181,7 @@ class DeepQLearner(object):
         loss.backward()
         self.optimizer.step()
         self.losses.append(loss.item())
-        nn.utils.clip_grad_norm_(self.model.parameters(), self.clip)
+        nn.utils.clip_grad_norm_(self.policy_net.parameters(), self.clip)
         self.state = next_state
         self.action = next_action if self.epsilon < rand.random() else rand.randint(0, self.num_actions - 1)
         self.epsilon *= self.epsilon_decay
@@ -225,15 +226,18 @@ class DeepQLearner(object):
 
         self.policy_net.eval()
         with torch.no_grad():
-            next_output = self.policy_net(torch.Tensor(s_prime_list).to(self.device))
+            if self.camera:
+                next_output = self.policy_net(torch.Tensor(s_prime_list).to(self.device), torch.Tensor(s_prime_state_list).to(self.device))
+            else:
+                next_output = self.policy_net(torch.Tensor(s_prime_list).to(self.device))
             next_output_Q, next_output_action = torch.max(next_output.data, 1)
             expected_reward = torch.Tensor(r_list).to(self.device) + self.discount_factor * next_output_Q
 
         self.policy_net.train()
         if self.camera:
-            output = self.policy_net(torch.Tensor([s_prime[0]]).to(self.device), torch.Tensor([s_prime[1]]).to(self.device))
+            output = self.policy_net(torch.Tensor([next_state[0]]).to(self.device), torch.Tensor([next_state[1]]).to(self.device))
         else:
-            output = self.policy_net(torch.Tensor([s_prime]).to(self.device))
+            output = self.policy_net(torch.Tensor([next_state]).to(self.device))
         output_Q, output_action = torch.max(output.data, 1)
         label = torch.Tensor()
         label.data = output.clone()
@@ -242,7 +246,7 @@ class DeepQLearner(object):
         loss = self.criterion(output, label)
         self.optimizer.zero_grad()
         loss.backward()
-        nn.utils.clip_grad_norm_(self.model.parameters(), self.clip)
+        nn.utils.clip_grad_norm_(self.policy_net.parameters(), self.clip)
         self.optimizer.step()
         self.losses.append(loss.item())
         return loss.item()
@@ -260,8 +264,8 @@ class DeepQLearner(object):
         if self.epsilon < rand.random():
             self.policy_net.eval()
             with torch.no_grad():
-                if self.camera or [self.s, self.a, s_prime, r] not in self.samples:
-                    self.samples.append([self.s, self.a, s_prime, r])
+                if self.camera or [self.state, self.action, next_state, reward] not in self.samples:
+                    self.samples.append([self.state, self.action, next_state, reward])
                 while len(self.samples) > self.max_samples:
                     self.samples.pop()
                 next_output = self.policy_net(torch.Tensor([next_state]).to(self.device))
@@ -288,13 +292,19 @@ class DeepQLearner(object):
         plt.xlabel("Iteration Number")
         plt.ylabel("Average Loss")
         plt.title("Average of loss across " + str(prices_length) + " iterations")
-        plt.show()
-        plt.savefig("./graphs/DQN_Avg_Loss_graph.png")
+        if self.verbose: plt.show()
+        if self.camera:
+            plt.savefig("./graphs/CameraDQN_Avg_Loss_graph.png")
+        else:
+            plt.savefig("./graphs/DQN_Avg_Loss_graph.png")
 
         plt.plot(self.losses)
         plt.xlabel("Iteration Number")
         plt.ylabel("Loss")
         plt.title("Overall Loss")
-        plt.show()
-        plt.savefig("./graphs/DQN_Loss_graph.png")
+        if self.verbose: plt.show()
+        if self.camera:
+            plt.savefig("./graphs/CameraDQN_Loss_graph.png")
+        else:
+            plt.savefig("./graphs/DQN_Loss_graph.png")
 

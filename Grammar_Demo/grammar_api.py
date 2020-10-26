@@ -9,8 +9,8 @@ from MalmoLogicState import *
 from constants import *
 from parse_grammar import GrammarParser
 from models.Agent import Agent
-from models.TabQAgent import TabQAgent
 from models.DQNAgent import DQNAgent
+from models.CameraDQNAgent import CameraDQNAgent
 import MalmoPython
 import json
 import logging
@@ -304,6 +304,8 @@ if __name__ == "__main__":
         mission.setAgent(TabQAgent, args.verbose)
     elif args.agent == 'DQNAgent':
         mission.setAgent(DQNAgent, args.verbose)
+    elif args.agent == 'CameraDQNAgent':
+        mission.setAgent(CameraDQNAgent, args.verbose)    
     else:
         print("unrecognized agent")
     mission.run_mission()
