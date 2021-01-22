@@ -72,7 +72,6 @@ class DeepQLearner(object):
         discount_factor = 0.5, \
         epsilon = 0.2, \
         epsilon_decay = 1, \
-        dyna = 10, \
         clip = 1, \
         learning_rate = 0.2, \
         load_path = None, \
@@ -90,7 +89,6 @@ class DeepQLearner(object):
         self.discount_factor = discount_factor
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
-        self.dyna = dyna
         self.clip = clip
         self.max_samples = 100
         self.camera = camera
@@ -110,11 +108,11 @@ class DeepQLearner(object):
         # Load saved model
         self.save_path = save_path
 
-        if load_path != None and os.path.exists(save_path):
-            checkpoint = torch.load(load_path, map_location=self.device)
-            self.policy_net.load_state_dict(checkpoint['model_state_dict'])
-            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            self.policy_net.eval()
+        # if load_path != None and os.path.exists(save_path):
+        #     checkpoint = torch.load(load_path, map_location=self.device)
+        #     self.policy_net.load_state_dict(checkpoint['model_state_dict'])
+        #     self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.policy_net.eval()
 
         self.losses = []
 
@@ -152,6 +150,7 @@ class DeepQLearner(object):
         while len(self.samples) > self.max_samples:
             self.samples.pop()
         reward += 5 if not self.camera else 0
+
         # query target net for action and calculate expected reward
         self.policy_net.eval()
         with torch.no_grad():
@@ -160,7 +159,6 @@ class DeepQLearner(object):
             else:
                 next_output = self.policy_net(torch.Tensor([next_state]).to(self.device))
             
-            # next_output = self.policy_net(torch.Tensor([next_state]).to(self.device))
             if self.verbose: print("model output: ", next_output)
             next_output_Q, next_output_action = torch.max(next_output.data, 1)
             next_action = next_output_action[0].item()
@@ -294,7 +292,7 @@ class DeepQLearner(object):
         plt.title("Average of loss across " + str(prices_length) + " iterations")
         if self.verbose: plt.show()
         if self.camera:
-            plt.savefig("./graphs/CameraDQN_Avg_Loss_graph.png")
+            plt.savefig("./graphs/dynaCameraDQN_Avg_Loss_graph.png")
         else:
             plt.savefig("./graphs/DQN_Avg_Loss_graph.png")
 
@@ -304,7 +302,7 @@ class DeepQLearner(object):
         plt.title("Overall Loss")
         if self.verbose: plt.show()
         if self.camera:
-            plt.savefig("./graphs/CameraDQN_Loss_graph.png")
+            plt.savefig("./graphs/dynaCameraDQN_Loss_graph.png")
         else:
             plt.savefig("./graphs/DQN_Loss_graph.png")
 

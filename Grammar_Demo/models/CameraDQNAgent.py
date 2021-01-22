@@ -10,6 +10,7 @@ from MalmoLogicState import *
 from constants import *
 from models.Agent import Agent
 from PIL import Image
+import imagehash as iHash
 import MalmoPython
 import json
 import logging
@@ -44,17 +45,15 @@ class CameraDQNAgent(Agent):
         logicState = agentHost.state
         self.move_actions = ["movenorth 1", "movesouth 1", "movewest 1", "moveeast 1"]
         (x1, y1, z1), (x2, y2, z2) = logicState.world_bounds.roundPosition()
-        self.dyna_rate = 1
+        self.dyna_rate = 0.95
         self.counter = 0
         self.gamma = 0.9
         self.learner = DeepQLearner(
             input_size = 31,
-            num_actions=len(self.move_actions) + len(logicState.actions),
             discount_factor=self.gamma,
             epsilon=0.1,
             learning_rate = 0.0005,
             clip = 0.2,
-            dyna = self.dyna_rate,
             load_path='cache/camera_dqn.pkl',
             save_path='cache/camera_dqn.pkl',
             camera=True,
@@ -102,7 +101,7 @@ class CameraDQNAgent(Agent):
         # flips channel to give rgb image instead of blue scaled
         embedding = np.flip(embedding, -1)
         if self.saveSnapshots and self.verbose: # save image
-            curr_hash = hash(Image.fromarray(embedding))
+            curr_hash = iHash.average_hash(Image.fromarray(embedding))
             cv2.imwrite('./images/' + str(curr_hash) + '-' + str(self.counter) + '.jpg', embedding)
             self.counter += 1
         embedding = np.moveaxis(embedding, -1, 0)
@@ -260,9 +259,9 @@ class CameraDQNAgent(Agent):
         self.learner.query(final_s, current_reward)
 
         # double check if this improves accuracy
-        # if self.dyna_rate > random.random():
-        #     if self.verbose: print("Running dyna replay...")
-        #     self.learner.run_dyna()
+        if self.dyna_rate > random.random():
+            if self.verbose: print("Running dyna replay...")
+            self.learner.run_dyna()
 
         if self.verbose: self.drawQ()
         self.cumulative_rewards.append(total_reward)

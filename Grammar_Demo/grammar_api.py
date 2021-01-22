@@ -9,6 +9,7 @@ from MalmoLogicState import *
 from constants import *
 from parse_grammar import GrammarParser
 from models.Agent import Agent
+from models.TabQAgent import TabQAgent
 from models.DQNAgent import DQNAgent
 from models.CameraDQNAgent import CameraDQNAgent
 import MalmoPython
@@ -19,6 +20,7 @@ import random
 import sys
 import time
 import argparse
+import matplotlib.pyplot as plt
 
 if sys.version_info[0] == 2:
     # Workaround for https://github.com/PythonCharmers/python-future/issues/262
@@ -221,6 +223,18 @@ class GrammarMission:
     def getGrammar(self):
         return self.grammar_logic
 
+    def plot_reward(self, cumulative_rewards):
+        plt.plot(cumulative_rewards)
+        plt.xlabel("Iteration Number")
+        plt.ylabel("Rewards")
+        plt.title("Rewards across " + str(self.repeats) + " iterations")
+        if self.verbose: plt.show()
+        if type(self.agent) == TabQAgent:
+            plt.savefig("./graphs/TabQ_Reward_graph.png")
+        elif type(self.agent) == DQNAgent:
+            plt.savefig("./graphs/DQN_Reward_graph.png")
+        elif type(self.agent) == CameraDQNAgent:
+            plt.savefig("./graphs/dynaCameraDQN_Reward_graph.png")
 
     '''
     @summary: Runs the current mission
@@ -276,12 +290,13 @@ class GrammarMission:
             cumulative_reward = self.agent.run()
             if self.verbose: print('\n Cumulative reward: %d' % cumulative_reward)
             cumulative_rewards += [ cumulative_reward ]
-
             if i % checkpoint_iter == 0:
                 self.agent.logOutput()
 
             # -- clean up -- #
             time.sleep(0.5) # (let the Mod reset)
+            
+        self.plot_reward(cumulative_rewards)
         self.agent.learner.plot_loss()
         if self.verbose: 
             print("Done.")
@@ -293,7 +308,7 @@ parser = argparse.ArgumentParser(description='Run missions in Malmo')
 parser.add_argument("--mission_file", help='choose which mission file to run', default='./grammar_demo.xml') 
 parser.add_argument("--quest_file", help='choose file to specify quest entities', default='./quest_entities.xml')
 parser.add_argument("--grammar_file", help='choose file to specify logical grammar', default="./quest_grammar.json")
-parser.add_argument("--agent", help='choose which agent to run (TabQAgent, DQNAgent)', default="TabQAgent")
+parser.add_argument("--agent", help='choose which agent to run (TabQAgent, DQNAgent, CameraDQNAgent)', default="TabQAgent")
 parser.add_argument("--repeats", help='How many times the agent is run (default=100)', type=int, default=100)
 parser.add_argument("--verbose", help='Provides more detailed info about the mission run', action='store_true', default=False)
 args = parser.parse_args()
