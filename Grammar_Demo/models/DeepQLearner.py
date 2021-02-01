@@ -68,12 +68,11 @@ class DeepQLearner(object):
     def __init__(self, \
         input_size = 31, \
         num_actions = 2, \
-        alpha = 0.2, \
-        discount_factor = 0.5, \
+        discount_factor = 0.9, \
         epsilon = 0.2, \
-        epsilon_decay = 1, \
+        epsilon_decay = 0.99, \
         clip = 1, \
-        learning_rate = 0.2, \
+        learning_rate = 0.0002, \
         load_path = None, \
         save_path = None, \
         camera = False, \
@@ -85,7 +84,6 @@ class DeepQLearner(object):
         self.state = [0] * input_size
         self.action = 0
 
-        self.alpha = alpha # not used at all
         self.discount_factor = discount_factor
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
@@ -292,7 +290,7 @@ class DeepQLearner(object):
         plt.title("Average of loss across " + str(prices_length) + " iterations")
         if self.verbose: plt.show()
         if self.camera:
-            plt.savefig("./graphs/dynaCameraDQN_Avg_Loss_graph.png")
+            plt.savefig("./graphs/CameraDQN_Avg_Loss_graph.png")
         else:
             plt.savefig("./graphs/DQN_Avg_Loss_graph.png")
 
@@ -302,7 +300,7 @@ class DeepQLearner(object):
         plt.title("Overall Loss")
         if self.verbose: plt.show()
         if self.camera:
-            plt.savefig("./graphs/dynaCameraDQN_Loss_graph.png")
+            plt.savefig("./graphs/CameraDQN_Loss_graph.png")
         else:
             plt.savefig("./graphs/DQN_Loss_graph.png")
 

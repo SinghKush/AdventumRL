@@ -33,7 +33,7 @@
   </ServerSection>
 
   <AgentSection mode="Survival">
-    <Name>Cristina Jr.</Name>
+    <Name>Cristina II</Name>
     <AgentStart>
       <Placement x="4.5" y="46.0" z="1.5" pitch="30" yaw="0"/>
     </AgentStart>
@@ -48,7 +48,7 @@
         <Block reward="0.5" type="redstone_block" behaviour="oncePerBlock"/>
         <Block reward="1.0" type="diamond_block" behaviour="oncePerBlock"/>
         <Block reward="0.75" type="lapis_block" behaviour="oncePerBlock"/>
-        <Block reward="0.5" type="sandstone" behaviour="oncePerBlock"/>
+        <Block reward="0.05" type="sandstone" behaviour="oncePerBlock"/>
       </RewardForTouchingBlockType>
       <ObservationFromGrid>
           <Grid name="floor3x3">
@@ -56,7 +56,7 @@
             <max x="1" y="-1" z="1"/>
           </Grid>
       </ObservationFromGrid>
-      <RewardForSendingCommand reward="-1" />
+      <RewardForSendingCommand reward="-0.001" />
       <AgentQuitFromTouchingBlockType>
           <Block type="lava" />
           <!--<Block type="lapis_block" />-->

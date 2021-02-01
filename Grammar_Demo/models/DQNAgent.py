@@ -47,6 +47,11 @@ class DQNAgent(Agent):
             input_size= (x2-x1+1) + (z2-z1+1)
                 + len(logicState.actions) + len(logicState.triggers),
             num_actions=len(self.move_actions) + len(logicState.actions),
+            discount_factor = 0.9,
+            epsilon = 0.2,
+            epsilon_decay = 0.99,
+            learning_rate = 0.0005,
+            clip = 1,
             load_path='cache/dqn.pkl',
             save_path='cache/dqn.pkl',
             verbose=self.verbose)
@@ -94,7 +99,6 @@ class DQNAgent(Agent):
         Same as act method but also returns action taken
         Required to implement because of Agent definition
         """
-
         # Set malmo system to current world state
         self.setState(world_state)
         try:
@@ -104,12 +108,13 @@ class DQNAgent(Agent):
             return 0
         self.logger.debug("\n Full Observation: " + str(obs))
 
-
-        current_state = self.getState()
-        allActions = self.move_actions + self.getActionSpace()
+        # Get state and all possible actions
+        current_state = self.host.state.getStateEmbedding()
+        logicalActions = self.host.state.getApplicableActions()
+        allActions = self.move_actions + logicalActions
         self.logger.debug("\n State: %s (x = %.2f, z = %.2f)" % (current_state, float(obs[u'XPos']), float(obs[u'ZPos'])))
 
-        # update Q values
+        # update Q values and run neural net
         if self.prev_state is None or self.prev_action is None:
             action = self.learner.querysetstate(current_state)
         else:
@@ -117,7 +122,6 @@ class DQNAgent(Agent):
             self.learner.run_dyna()
 
         if self.verbose: self.draw_QTable( curr_x = int(obs[u'XPos']), curr_y = int(obs[u'ZPos']) )
-
         self.logger.info("\n Taking q action: %s" % allActions[action % len(allActions)])
 
         # try to send the selected action, only update prev_s if this succeeds
@@ -128,7 +132,7 @@ class DQNAgent(Agent):
         except RuntimeError as e:
             self.logger.error("\n Failed to send command: %s" % e)
 
-        return allActions[action], current_reward
+        return allActions[action % len(allActions)], current_reward
 
     def act(self, world_state, current_reward):
         """take 1 action in response to the current world state"""
@@ -183,6 +187,7 @@ class DQNAgent(Agent):
         while world_state.is_mission_running:
 
             current_reward = 0
+            # actionString = ""
 
             if is_first_action:
                 self.host.resetState()
@@ -195,9 +200,15 @@ class DQNAgent(Agent):
                     #accumulate reward for current state
                     for reward in world_state.rewards:
                         current_reward += reward.getValue()
+                    # print(current_reward)
                     current_reward += self.host.rewardValue()
+                    # print(current_reward)
                     # if running and have observations, act on state and set total reward to curr reward
                     if world_state.is_mission_running and len(world_state.observations)>0 and not world_state.observations[-1].text=="{}":
+                        # action, reward = self.queryActions(world_state, current_reward)
+                        # total_reward += reward
+                        # actionString += str(action)
+                        # actionString += ", "
                         total_reward += self.act(world_state, current_reward)
                         break
                     if not world_state.is_mission_running:
@@ -212,7 +223,9 @@ class DQNAgent(Agent):
                         self.logger.error("Error: %s" % error.text)
                     for reward in world_state.rewards:
                         current_reward += reward.getValue()
+                    # print(current_reward)
                     current_reward += self.host.rewardValue()
+                    # print(current_reward)
 
                 # allow time to stabilise after action
                 while True:
@@ -222,13 +235,24 @@ class DQNAgent(Agent):
                         self.logger.error("Error: %s" % error.text)
                     for reward in world_state.rewards:
                         current_reward += reward.getValue()
+                    # print(current_reward)
                     current_reward += self.host.rewardValue()
+                    # print(current_reward)
                     # if running and have observations, act on state and set total reward to curr reward
                     if world_state.is_mission_running and len(world_state.observations)>0 and not world_state.observations[-1].text=="{}":
+                        # action, reward = self.queryActions(world_state, current_reward)
+                        # total_reward += reward
+                        # actionString += str(action)
+                        # actionString += ", "
                         total_reward += self.act(world_state, current_reward)
                         break
                     if not world_state.is_mission_running:
                         break
+            
+            # if len(actionString) > 13:
+            #     print(actionString)
+            #     input("Continue...")
+            #     actionString = ""
 
         # process final reward
         self.logger.debug("Final reward: %d" % current_reward)

@@ -45,15 +45,18 @@ class CameraDQNAgent(Agent):
         logicState = agentHost.state
         self.move_actions = ["movenorth 1", "movesouth 1", "movewest 1", "moveeast 1"]
         (x1, y1, z1), (x2, y2, z2) = logicState.world_bounds.roundPosition()
-        self.dyna_rate = 0.95
+
+
+        self.dyna_rate = 0.7
         self.counter = 0
-        self.gamma = 0.9
         self.learner = DeepQLearner(
             input_size = 31,
-            discount_factor=self.gamma,
-            epsilon=0.1,
+            num_actions=len(self.move_actions) + len(logicState.actions),
+            discount_factor = 0.98,
+            epsilon = 0.2,
+            epsilon_decay = 0.99,
             learning_rate = 0.0005,
-            clip = 0.2,
+            clip = 1,
             load_path='cache/camera_dqn.pkl',
             save_path='cache/camera_dqn.pkl',
             camera=True,

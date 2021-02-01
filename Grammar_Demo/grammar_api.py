@@ -234,7 +234,7 @@ class GrammarMission:
         elif type(self.agent) == DQNAgent:
             plt.savefig("./graphs/DQN_Reward_graph.png")
         elif type(self.agent) == CameraDQNAgent:
-            plt.savefig("./graphs/dynaCameraDQN_Reward_graph.png")
+            plt.savefig("./graphs/CameraDQN_Reward_graph.png")
 
     '''
     @summary: Runs the current mission
