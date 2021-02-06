@@ -31,6 +31,7 @@ class DQNAgent(Agent):
         # set debuggers
         self.logger = logging.getLogger(__name__)
         self.verbose = agentHost.verbose
+        self.no_training = agentHost.no_training
         if self.verbose: # True if you want to see more information
             self.logger.setLevel(logging.DEBUG)
         self.logger.handlers = []
@@ -54,7 +55,8 @@ class DQNAgent(Agent):
             clip = 1,
             load_path='cache/dqn.pkl',
             save_path='cache/dqn.pkl',
-            verbose=self.verbose)
+            verbose=self.verbose, 
+            no_training = self.no_training)
 
         # set vars for draw_QTable method
         self.canvas = None

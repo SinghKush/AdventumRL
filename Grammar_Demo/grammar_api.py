@@ -12,6 +12,7 @@ from models.Agent import Agent
 from models.TabQAgent import TabQAgent
 from models.DQNAgent import DQNAgent
 from models.CameraDQNAgent import CameraDQNAgent
+from datetime import datetime
 import MalmoPython
 import json
 import logging
@@ -59,7 +60,7 @@ class GrammarLogic:
 @summary: Holds all information for the currently executing mission, calls everything else
 '''
 class GrammarMission:
-    def __init__(self, mission_file='./grammar_demo.xml', quest_file='./quest_entities.xml', grammar_file="./quest_grammar.json", agent=None, repeats=100, verbose=False):
+    def __init__(self, mission_file='./grammar_demo.xml', quest_file='./quest_entities.xml', grammar_file="./quest_grammar.json", agent=None, repeats=100, verbose=False, no_training=False):
         self.mission_file = mission_file
         self.quest_file = quest_file
         self.grammar_file = grammar_file
@@ -67,6 +68,7 @@ class GrammarMission:
         self.verbose = verbose
         self.agent = agent
         self.repeats = repeats
+        self.no_training = no_training
 
     '''
     @summary: Parses the quest and mission files to create the initial world state
@@ -170,14 +172,15 @@ class GrammarMission:
     @summary: Sets the current agent to a different one
     @param agent: The new agent to run the mission with
     '''
-    def setAgent(self, agent: Agent, verbose=False):
+    def setAgent(self, agent: Agent, verbose=False, no_training=False):
         self.agent = agent(
             LogicalAgentHost(
                 initialState = self.getInitialWorldState(),
                 actions = self.grammar_logic.logicalActions,
                 goal = self.grammar_logic.goal,
                 triggers = self.grammar_logic.triggers,
-                verbose = verbose
+                verbose = verbose,
+                no_training=no_training
             )
         )
 
@@ -227,14 +230,12 @@ class GrammarMission:
         plt.plot(cumulative_rewards)
         plt.xlabel("Iteration Number")
         plt.ylabel("Rewards")
-        plt.title("Rewards across " + str(self.repeats) + " iterations")
+        plt.title("Rewards across " + str(len(cumulative_rewards)) + " iterations")
         if self.verbose: plt.show()
-        if type(self.agent) == TabQAgent:
-            plt.savefig("./graphs/TabQ_Reward_graph.png")
-        elif type(self.agent) == DQNAgent:
-            plt.savefig("./graphs/DQN_Reward_graph.png")
-        elif type(self.agent) == CameraDQNAgent:
-            plt.savefig("./graphs/CameraDQN_Reward_graph.png")
+        currentTime = datetime.now().strftime("%m%d_%H%M")
+        plt.savefig(f"./graphs/{str(type(self.agent).__name__)}_{currentTime}_{len(cumulative_rewards)}_Iterations_Reward.png")
+        plt.clf()
+
 
     '''
     @summary: Runs the current mission
@@ -292,12 +293,17 @@ class GrammarMission:
             cumulative_rewards += [ cumulative_reward ]
             if i % checkpoint_iter == 0:
                 self.agent.logOutput()
+                self.plot_reward(cumulative_rewards)
+                if str(type(self.agent).__name__)!= "TabQAgent":
+                    self.agent.learner.plot_loss()
+                print(f"{i} Iterations Complete")
 
             # -- clean up -- #
             time.sleep(0.5) # (let the Mod reset)
             
         self.plot_reward(cumulative_rewards)
-        self.agent.learner.plot_loss()
+        if str(type(self.agent).__name__) != "TabQAgent":
+            self.agent.learner.plot_loss()
         if self.verbose: 
             print("Done.")
             print("\n Cumulative rewards for all %d runs:" % num_repeats)
@@ -311,16 +317,17 @@ parser.add_argument("--grammar_file", help='choose file to specify logical gramm
 parser.add_argument("--agent", help='choose which agent to run (TabQAgent, DQNAgent, CameraDQNAgent)', default="TabQAgent")
 parser.add_argument("--repeats", help='How many times the agent is run (default=100)', type=int, default=100)
 parser.add_argument("--verbose", help='Provides more detailed info about the mission run', action='store_true', default=False)
+parser.add_argument("--no_training", help='Run the DQN agent without further training', action='store_true', default=False)
 args = parser.parse_args()
 
 if __name__ == "__main__":
-    mission = GrammarMission(mission_file=args.mission_file, quest_file=args.quest_file, grammar_file=args.grammar_file, repeats=args.repeats, verbose=args.verbose)
+    mission = GrammarMission(mission_file=args.mission_file, quest_file=args.quest_file, grammar_file=args.grammar_file, repeats=args.repeats, verbose=args.verbose, no_training=args.no_training)
     if args.agent == 'TabQAgent':
-        mission.setAgent(TabQAgent, args.verbose)
+        mission.setAgent(TabQAgent, args.verbose, args.no_training)
     elif args.agent == 'DQNAgent':
-        mission.setAgent(DQNAgent, args.verbose)
+        mission.setAgent(DQNAgent, args.verbose, args.no_training)
     elif args.agent == 'CameraDQNAgent':
-        mission.setAgent(CameraDQNAgent, args.verbose)    
+        mission.setAgent(CameraDQNAgent, args.verbose, args.no_training)    
     else:
         print("unrecognized agent")
     mission.run_mission()

@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import os
+from datetime import datetime
 #from collections import deque
 
 class NeuralNet(nn.Module):
@@ -76,7 +77,8 @@ class DeepQLearner(object):
         load_path = None, \
         save_path = None, \
         camera = False, \
-        verbose = False):
+        verbose = False, \
+        no_training = False):
 
         self.verbose = verbose
         self.input_size = input_size
@@ -92,6 +94,7 @@ class DeepQLearner(object):
         self.camera = camera
         self.learning_rate = learning_rate
         self.samples = []
+        self.no_training = no_training
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         if not self.camera:
@@ -163,7 +166,8 @@ class DeepQLearner(object):
             expected_reward = reward + self.discount_factor * next_output_Q[0].item()
 
         # set 
-        self.policy_net.train()
+        if not self.no_training:
+            self.policy_net.train()
         if self.camera:
             output = self.policy_net(torch.Tensor([self.state[0]]).to(self.device), torch.Tensor([self.state[1]]).to(self.device))
         else:
@@ -173,11 +177,12 @@ class DeepQLearner(object):
         label.data = output.clone()
         label[0][self.action] = expected_reward
         loss = self.criterion(output, label)
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-        self.losses.append(loss.item())
-        nn.utils.clip_grad_norm_(self.policy_net.parameters(), self.clip)
+        if not self.no_training:
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+            self.losses.append(loss.item())
+            nn.utils.clip_grad_norm_(self.policy_net.parameters(), self.clip)
         self.state = next_state
         self.action = next_action if self.epsilon < rand.random() else rand.randint(0, self.num_actions - 1)
         self.epsilon *= self.epsilon_decay
@@ -284,23 +289,21 @@ class DeepQLearner(object):
     def plot_loss(self):
         prices_length = 10
         ravgs = [sum(self.losses[i:i+prices_length])/prices_length for i in range(len(self.losses)-prices_length+1)]
+        currentTime = datetime.now().strftime("%m%d_%H%M")
+        agentType = "CameraDQN" if self.camera else "DQN"
+        
         plt.plot(ravgs)
         plt.xlabel("Iteration Number")
         plt.ylabel("Average Loss")
         plt.title("Average of loss across " + str(prices_length) + " iterations")
         if self.verbose: plt.show()
-        if self.camera:
-            plt.savefig("./graphs/CameraDQN_Avg_Loss_graph.png")
-        else:
-            plt.savefig("./graphs/DQN_Avg_Loss_graph.png")
-
+        plt.savefig(f"./graphs/{agentType}_{currentTime}_Avg_Loss_Graph.png")
+        plt.clf()
+        
         plt.plot(self.losses)
         plt.xlabel("Iteration Number")
         plt.ylabel("Loss")
         plt.title("Overall Loss")
         if self.verbose: plt.show()
-        if self.camera:
-            plt.savefig("./graphs/CameraDQN_Loss_graph.png")
-        else:
-            plt.savefig("./graphs/DQN_Loss_graph.png")
-
+        plt.savefig(f"./graphs/{agentType}_{currentTime}_Overall_Loss_Graph.png")
+        plt.clf()
