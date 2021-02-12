@@ -189,7 +189,7 @@ class MalmoLogicState(State):
 
 
 class LogicalAgentHost(MalmoPython.AgentHost):
-    def __init__(self, initialState = None, actions=[], goal=None, triggers=[], verbose=False):
+    def __init__(self, initialState = None, actions=[], goal=None, triggers=[], verbose=False, no_training=False):
         super().__init__()
         self.state = initialState
         self.state.goal = goal
@@ -201,6 +201,7 @@ class LogicalAgentHost(MalmoPython.AgentHost):
         self.pastHeuristic = self.initialState.goalHeuristic()
         self.heuristicReward = 15
         self.verbose = verbose
+        self.no_training = no_training
 
     def updateLogicState(self, world_state):
         self.state.updateLogicState(world_state)

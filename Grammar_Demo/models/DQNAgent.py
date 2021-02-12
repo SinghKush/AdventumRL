@@ -32,6 +32,7 @@ class DQNAgent(Agent):
         # set debuggers
         self.logger = logging.getLogger(__name__)
         self.verbose = agentHost.verbose
+        self.no_training = agentHost.no_training
         if self.verbose: # True if you want to see more information
             self.logger.setLevel(logging.DEBUG)
         self.logger.handlers = []
@@ -122,9 +123,6 @@ class DQNAgent(Agent):
             action = self.learner.querysetstate(current_state)
         else:
             action = self.learner.query(current_state, current_reward)
-        
-        if self.dyna_rate > rand.random():
-            self.learner.run_dyna()
 
         if self.verbose: self.draw_QTable( curr_x = int(obs[u'XPos']), curr_y = int(obs[u'ZPos']) )
         self.logger.info("\n Taking q action: %s" % allActions[action % len(allActions)])
@@ -158,11 +156,10 @@ class DQNAgent(Agent):
         self.logger.debug("\n State: %s (x = %.2f, z = %.2f)" % (current_state, float(obs[u'XPos']), float(obs[u'ZPos'])))
 
         # update Q values and run neural net
-        if self.prev_state is None or self.prev_action is None:
+        if self.prev_state is None or self.prev_action is None or self.no_training:
             action = self.learner.querysetstate(current_state)
         else:
             action = self.learner.query(current_state, current_reward)
-            self.learner.run_dyna()
 
         if self.verbose: self.draw_QTable( curr_x = int(obs[u'XPos']), curr_y = int(obs[u'ZPos']) )
         self.logger.info("\n Taking q action: %s" % allActions[action % len(allActions)])
@@ -184,7 +181,7 @@ class DQNAgent(Agent):
 
         self.prev_state = None
         self.prev_action = None
-        # self.learner.clear_dyna()
+
         is_first_action = True
 
         # main loop:
@@ -249,7 +246,8 @@ class DQNAgent(Agent):
         # update Q values
         # if self.prev_state is not None and self.prev_action is not None:
         #     self.learner.query(self.host.state.getStateEmbedding(), current_reward)
-        self.learner.run_dyna()
+        if not self.no_training:
+            self.learner.run_dyna()
 
         self.learner.updateEps()
         

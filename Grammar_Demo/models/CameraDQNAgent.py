@@ -36,6 +36,7 @@ class CameraDQNAgent(Agent):
     def __init__(self, agentHost=None):
         self.logger = logging.getLogger(__name__)
         self.verbose = agentHost.verbose
+        self.no_training = agentHost.no_training
         if self.verbose: # True if you want to see more information
             self.logger.setLevel(logging.DEBUG)
         self.logger.handlers = []
@@ -174,7 +175,7 @@ class CameraDQNAgent(Agent):
         #current_state.append(frame.pixels)
 
         # update Q values
-        if self.prev_state is not None and self.prev_action is not None:
+        if self.prev_state is not None or self.prev_action is not None or self.no_training:
             action = self.learner.query(current_state, current_reward)
         else:
             action = self.learner.querysetstate(current_state)
@@ -265,7 +266,8 @@ class CameraDQNAgent(Agent):
         # double check if this improves accuracy
         # if self.dyna_rate > random.random():
         #     if self.verbose: print("Running dyna replay...")
-        self.learner.run_dyna()
+        if not self.no_training:
+            self.learner.run_dyna()
 
         self.learner.updateEps()
         

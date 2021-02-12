@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import os
+from datetime import datetime
 #from collections import deque
 
 class NeuralNet(nn.Module):
@@ -293,23 +294,21 @@ class DeepQLearner(object):
         plt.clf()
         prices_length = 10
         ravgs = [sum(self.losses[i:i+prices_length])/prices_length for i in range(len(self.losses)-prices_length+1)]
+        currentTime = datetime.now().strftime("%m%d_%H%M")
+        agentType = "CameraDQN" if self.camera else "DQN"
+        
         plt.plot(ravgs)
         plt.xlabel("Iteration Number")
         plt.ylabel("Average Loss")
         plt.title("Average of loss across " + str(prices_length) + " iterations")
         if self.verbose: plt.show()
-        if self.camera:
-            plt.savefig("./graphs/CameraDQN_Avg_Loss_graph.png")
-        else:
-            plt.savefig("./graphs/DQN_Avg_Loss_graph.png")
+        plt.savefig(f"./graphs/{agentType}_{currentTime}_Avg_Loss_Graph.png")
         plt.clf()
+        
         plt.plot(self.losses)
         plt.xlabel("Iteration Number")
         plt.ylabel("Loss")
         plt.title("Overall Loss")
         if self.verbose: plt.show()
-        if self.camera:
-            plt.savefig("./graphs/CameraDQN_Loss_graph.png")
-        else:
-            plt.savefig("./graphs/DQN_Loss_graph.png")
-
+        plt.savefig(f"./graphs/{agentType}_{currentTime}_Overall_Loss_Graph.png")
+        plt.clf()
