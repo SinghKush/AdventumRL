@@ -101,7 +101,8 @@ class DeepQLearner(object):
 
         # Loss and optimizer
         self.criterion = nn.MSELoss()
-        self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=learning_rate)
+        # self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=learning_rate)
+        self.optimizer = torch.optim.SGD(self.policy_net.parameters(), lr=learning_rate)
 
         # Load saved model
         self.save_path = save_path
@@ -116,6 +117,10 @@ class DeepQLearner(object):
 
     def author(self):
         return 'kxiao36'
+
+    def updateEps(self):
+        self.epsilon *= self.epsilon_decay
+        return
 
     def querysetstate(self, s):
         """
@@ -147,6 +152,7 @@ class DeepQLearner(object):
         self.samples.append([self.state, self.action, next_state, reward])
         while len(self.samples) > self.max_samples:
             self.samples.pop()
+            # self.samples.remove(rand.choice(self.samples))
         reward += 5 if not self.camera else 0
 
         # query target net for action and calculate expected reward
@@ -180,7 +186,7 @@ class DeepQLearner(object):
         nn.utils.clip_grad_norm_(self.policy_net.parameters(), self.clip)
         self.state = next_state
         self.action = next_action if self.epsilon < rand.random() else rand.randint(0, self.num_actions - 1)
-        self.epsilon *= self.epsilon_decay
+        # self.epsilon *= self.epsilon_decay
 
         if self.verbose: print("s =", next_state,"a =",self.action,"reward =",reward)
         return self.action
@@ -282,6 +288,9 @@ class DeepQLearner(object):
             }, self.save_path)
 
     def plot_loss(self):
+        # print(len(self.losses))
+        # print(self.losses)
+        plt.clf()
         prices_length = 10
         ravgs = [sum(self.losses[i:i+prices_length])/prices_length for i in range(len(self.losses)-prices_length+1)]
         plt.plot(ravgs)
@@ -293,7 +302,7 @@ class DeepQLearner(object):
             plt.savefig("./graphs/CameraDQN_Avg_Loss_graph.png")
         else:
             plt.savefig("./graphs/DQN_Avg_Loss_graph.png")
-
+        plt.clf()
         plt.plot(self.losses)
         plt.xlabel("Iteration Number")
         plt.ylabel("Loss")

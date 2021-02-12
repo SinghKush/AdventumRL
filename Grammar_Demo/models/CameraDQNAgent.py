@@ -3,6 +3,7 @@ from future import standard_library
 standard_library.install_aliases()
 import sys
 from models.DeepQLearner import *
+from models.DeepQLearner2 import *
 from builtins import range
 from builtins import object
 from textworld.logic import Action, Rule, Placeholder, Predicate, Proposition, Signature, State, Variable
@@ -47,15 +48,15 @@ class CameraDQNAgent(Agent):
         (x1, y1, z1), (x2, y2, z2) = logicState.world_bounds.roundPosition()
 
 
-        self.dyna_rate = 0.7
-        self.counter = 0
-        self.learner = DeepQLearner(
+        # self.dyna_rate = 0.7
+        self.learner = DeepQLearner2(
             input_size = 31,
             num_actions=len(self.move_actions) + len(logicState.actions),
-            discount_factor = 0.98,
-            epsilon = 0.2,
-            epsilon_decay = 0.99,
-            learning_rate = 0.0005,
+            discount_factor = 0.98, # 0.9
+            epsilon = 0.2, 
+            epsilon_decay = 0.99,# 0.99
+            learning_rate = 0.0005, # 0.0005
+            dyna_rate = 20, 
             clip = 1,
             load_path='cache/camera_dqn.pkl',
             save_path='cache/camera_dqn.pkl',
@@ -259,13 +260,15 @@ class CameraDQNAgent(Agent):
 
         # update Q values
         final_s = (np.array(frame.pixels).reshape(3, frame.height, frame.width), self.host.state.getStateEmbedding())
-        self.learner.query(final_s, current_reward)
+        # self.learner.query(final_s, current_reward)
 
         # double check if this improves accuracy
-        if self.dyna_rate > random.random():
-            if self.verbose: print("Running dyna replay...")
-            self.learner.run_dyna()
+        # if self.dyna_rate > random.random():
+        #     if self.verbose: print("Running dyna replay...")
+        self.learner.run_dyna()
 
+        self.learner.updateEps()
+        
         if self.verbose: self.drawQ()
         self.cumulative_rewards.append(total_reward)
 

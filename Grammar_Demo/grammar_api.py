@@ -224,6 +224,7 @@ class GrammarMission:
         return self.grammar_logic
 
     def plot_reward(self, cumulative_rewards):
+        plt.clf()
         plt.plot(cumulative_rewards)
         plt.xlabel("Iteration Number")
         plt.ylabel("Rewards")

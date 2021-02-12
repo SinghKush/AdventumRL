@@ -78,8 +78,8 @@
                     ]
                 }
             ],
-            "command": "reward 0.3 ",
-            "reward": 0
+            "command": "reward 0.5",
+            "reward": 0.5
         },
         {
             "name": "unlock",
@@ -114,7 +114,7 @@
                 }
             ],
             "command": "discardCurrentItem",
-            "reward": 0.5
+            "reward": 0.75
         },
         {
             "name": "goal",

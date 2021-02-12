@@ -26,12 +26,17 @@ class TabQAgent(Agent):
     """Tabular Q-learning agent for discrete state/action spaces."""
 
     def __init__(self, agentHost=None):
-        self.epsilon = 0.1 # chance of taking a random action instead of the best
         self.logger = logging.getLogger(__name__)
-        if False: # True if you want to see more information
+        self.verbose = agentHost.verbose
+        if self.verbose: # True if you want to see more information
             self.logger.setLevel(logging.DEBUG)
-        else:
-            self.logger.setLevel(logging.INFO)
+        self.logger.handlers = []
+        self.logger.addHandler(logging.StreamHandler(sys.stdout))
+
+        self.epsilon = 0.1 # chance of taking a random action instead of the best
+        self.alpha = 0.5
+        self.gamma = 0.9
+
         self.host = agentHost
         self.logger.handlers = []
         self.logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -40,8 +45,6 @@ class TabQAgent(Agent):
         self.logical_q_table = {}
         self.canvas = None
         self.root = None
-        self.alpha = 0.5
-        self.gamma = 0.9
         self.cumulative_rewards = []
         self.logFile = 'TabQAgent-' + time.strftime("%Y%m%d-%H%M%S") + '.txt'
 
@@ -78,7 +81,7 @@ class TabQAgent(Agent):
         if self.prev_s is not None and self.prev_a is not None:
             self.updateQTable( current_r, current_s )
 
-        self.drawQ( curr_x = int(obs[u'XPos']), curr_y = int(obs[u'ZPos']) )
+        if self.verbose: self.drawQ( curr_x = int(obs[u'XPos']), curr_y = int(obs[u'ZPos']) )
 
         # select the next action
         rnd = random.random()
@@ -154,7 +157,7 @@ class TabQAgent(Agent):
         if self.prev_s is not None and self.prev_a is not None:
             self.updateQTable( current_r, current_s )
 
-        self.drawQ( curr_x = int(obs[u'XPos']), curr_y = int(obs[u'ZPos']) )
+        if self.verbose: self.drawQ( curr_x = int(obs[u'XPos']), curr_y = int(obs[u'ZPos']) )
 
         # select the next action
         rnd = random.random()
@@ -258,7 +261,7 @@ class TabQAgent(Agent):
         if self.prev_s is not None and self.prev_a is not None:
             self.updateQTableFromTerminatingState( current_r )
 
-        self.drawQ()
+        if self.verbose: self.drawQ()
 
         self.cumulative_rewards.append(total_reward)
 

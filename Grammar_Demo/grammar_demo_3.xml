@@ -44,10 +44,10 @@
       <ObservationFromFullStats/>
       <ObservationFromFullInventory flat="false"/>
       <RewardForTouchingBlockType>
-        <Block reward="-0.5" type="lava" behaviour="onceOnly"/>
-        <Block reward="0.05" type="redstone_block" behaviour="oncePerBlock"/>
-        <Block reward="0.08" type="diamond_block" behaviour="oncePerBlock"/>
-        <Block reward="0.2" type="lapis_block" behaviour="oncePerBlock"/>
+        <Block reward="-1" type="lava" behaviour="onceOnly"/>
+        <!-- <Block reward="0.05" type="redstone_block" behaviour="oncePerBlock"/>
+        <Block reward="0.3" type="diamond_block" behaviour="oncePerBlock"/>
+        <Block reward="0.2" type="lapis_block" behaviour="oncePerBlock"/> -->
       </RewardForTouchingBlockType>
       <ObservationFromGrid>
           <Grid name="floor3x3">

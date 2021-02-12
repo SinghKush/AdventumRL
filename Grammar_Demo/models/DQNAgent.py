@@ -3,6 +3,7 @@ from future import standard_library
 standard_library.install_aliases()
 import sys
 from models.DeepQLearner import *
+from models.DeepQLearner2 import *
 from builtins import range
 from builtins import object
 from textworld.logic import Action, Rule, Placeholder, Predicate, Proposition, Signature, State, Variable
@@ -43,14 +44,16 @@ class DQNAgent(Agent):
         (x1, y1, z1), (x2, y2, z2) = logicState.world_bounds.roundPosition()
 
         # set dqn neural net in DeepQLearner.py
-        self.learner = DeepQLearner(
+        # self.dyna_rate = 20
+        self.learner = DeepQLearner2(
             input_size= (x2-x1+1) + (z2-z1+1)
                 + len(logicState.actions) + len(logicState.triggers),
             num_actions=len(self.move_actions) + len(logicState.actions),
-            discount_factor = 0.9,
-            epsilon = 0.2,
+            discount_factor = 0.95,
+            epsilon = 0.1,
             epsilon_decay = 0.99,
             learning_rate = 0.0005,
+            dyna_rate = 10,
             clip = 1,
             load_path='cache/dqn.pkl',
             save_path='cache/dqn.pkl',
@@ -119,6 +122,8 @@ class DQNAgent(Agent):
             action = self.learner.querysetstate(current_state)
         else:
             action = self.learner.query(current_state, current_reward)
+        
+        if self.dyna_rate > rand.random():
             self.learner.run_dyna()
 
         if self.verbose: self.draw_QTable( curr_x = int(obs[u'XPos']), curr_y = int(obs[u'ZPos']) )
@@ -179,7 +184,7 @@ class DQNAgent(Agent):
 
         self.prev_state = None
         self.prev_action = None
-
+        # self.learner.clear_dyna()
         is_first_action = True
 
         # main loop:
@@ -200,15 +205,9 @@ class DQNAgent(Agent):
                     #accumulate reward for current state
                     for reward in world_state.rewards:
                         current_reward += reward.getValue()
-                    # print(current_reward)
                     current_reward += self.host.rewardValue()
-                    # print(current_reward)
                     # if running and have observations, act on state and set total reward to curr reward
                     if world_state.is_mission_running and len(world_state.observations)>0 and not world_state.observations[-1].text=="{}":
-                        # action, reward = self.queryActions(world_state, current_reward)
-                        # total_reward += reward
-                        # actionString += str(action)
-                        # actionString += ", "
                         total_reward += self.act(world_state, current_reward)
                         break
                     if not world_state.is_mission_running:
@@ -223,10 +222,7 @@ class DQNAgent(Agent):
                         self.logger.error("Error: %s" % error.text)
                     for reward in world_state.rewards:
                         current_reward += reward.getValue()
-                    # print(current_reward)
                     current_reward += self.host.rewardValue()
-                    # print(current_reward)
-
                 # allow time to stabilise after action
                 while True:
                     time.sleep(0.1)
@@ -235,33 +231,28 @@ class DQNAgent(Agent):
                         self.logger.error("Error: %s" % error.text)
                     for reward in world_state.rewards:
                         current_reward += reward.getValue()
-                    # print(current_reward)
                     current_reward += self.host.rewardValue()
-                    # print(current_reward)
                     # if running and have observations, act on state and set total reward to curr reward
                     if world_state.is_mission_running and len(world_state.observations)>0 and not world_state.observations[-1].text=="{}":
-                        # action, reward = self.queryActions(world_state, current_reward)
-                        # total_reward += reward
-                        # actionString += str(action)
-                        # actionString += ", "
                         total_reward += self.act(world_state, current_reward)
                         break
                     if not world_state.is_mission_running:
                         break
-            
-            # if len(actionString) > 13:
-            #     print(actionString)
-            #     input("Continue...")
-            #     actionString = ""
+            # self.dyna_rate -= 1
+            # if self.dyna_rate == 0:
+            # self.learner.run_dyna()
 
         # process final reward
         self.logger.debug("Final reward: %d" % current_reward)
         total_reward += current_reward
 
         # update Q values
-        if self.prev_state is not None and self.prev_action is not None:
-            self.learner.query(self.host.state.getStateEmbedding(), current_reward)
+        # if self.prev_state is not None and self.prev_action is not None:
+        #     self.learner.query(self.host.state.getStateEmbedding(), current_reward)
+        self.learner.run_dyna()
 
+        self.learner.updateEps()
+        
         if self.verbose: self.draw_QTable()
         self.cumulative_rewards.append(total_reward)
 
