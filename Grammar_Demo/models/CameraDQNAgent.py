@@ -47,18 +47,17 @@ class CameraDQNAgent(Agent):
         logicState = agentHost.state
         self.move_actions = ["movenorth 1", "movesouth 1", "movewest 1", "moveeast 1"]
         (x1, y1, z1), (x2, y2, z2) = logicState.world_bounds.roundPosition()
-
-
-        # self.dyna_rate = 0.7
+34
+        # self.dyna_rate = 30
         self.learner = DeepQLearner2(
             input_size = 31,
             num_actions=len(self.move_actions) + len(logicState.actions),
-            discount_factor = 0.98, # 0.9
-            epsilon = 0.2, 
+            discount_factor = 0.8, # 0.9
+            epsilon = 0.99, 
             epsilon_decay = 0.99,# 0.99
-            learning_rate = 0.0005, # 0.0005
-            dyna_rate = 20, 
-            clip = 1,
+            learning_rate = 0.005, # 0.0005
+            dyna_rate = 40, 
+            clip = 0.3,
             load_path='cache/camera_dqn.pkl',
             save_path='cache/camera_dqn.pkl',
             camera=True,
@@ -135,7 +134,7 @@ class CameraDQNAgent(Agent):
         current_state = self.processFrame(frame.pixels, frame.width, frame.height, current_state)
 
         # update Q values
-        if self.prev_state is not None and self.prev_action is not None:
+        if self.prev_state is not None and self.prev_action is not None:\
             action = self.learner.query(current_state, current_reward)
         else:
             action = self.learner.querysetstate(current_state)
@@ -175,10 +174,11 @@ class CameraDQNAgent(Agent):
         #current_state.append(frame.pixels)
 
         # update Q values
-        if self.prev_state is not None or self.prev_action is not None or self.no_training:
-            action = self.learner.query(current_state, current_reward)
-        else:
+        if self.prev_state is None or self.prev_action is None or self.no_training: # changed and to or (double check)
             action = self.learner.querysetstate(current_state)
+        else:
+            action = self.learner.query(current_state, current_reward)
+            self.learner.run_dyna()
 
         if self.verbose: self.drawQ( curr_x = int(obs[u'XPos']), curr_y = int(obs[u'ZPos']) )
 
@@ -260,14 +260,13 @@ class CameraDQNAgent(Agent):
         total_reward += current_reward
 
         # update Q values
-        final_s = (np.array(frame.pixels).reshape(3, frame.height, frame.width), self.host.state.getStateEmbedding())
+        # final_s = (np.array(frame.pixels).reshape(3, frame.height, frame.width), self.host.state.getStateEmbedding())
         # self.learner.query(final_s, current_reward)
 
         # double check if this improves accuracy
-        # if self.dyna_rate > random.random():
+        # if self.counter%self.dyna_rate == 0 and not self.no_training:
         #     if self.verbose: print("Running dyna replay...")
-        if not self.no_training:
-            self.learner.run_dyna()
+        # self.learner.run_dyna()
 
         self.learner.updateEps()
         

@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import os
+from datetime import datetime
 #from collections import deque
 
 class NeuralNet(nn.Module):
@@ -40,6 +41,23 @@ class NeuralNet(nn.Module):
         out = self.fc4(out)
         return out
 
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        weight_shape = list(m.weight.data.size())
+        fan_in = np.prod(weight_shape[1:4])
+        fan_out = np.prod(weight_shape[2:4]) * weight_shape[0]
+        w_bound = np.sqrt(6. / (fan_in + fan_out))
+        m.weight.data.uniform_(-w_bound, w_bound)
+        m.bias.data.fill_(0)
+    elif classname.find('Linear') != -1:
+        weight_shape = list(m.weight.data.size())
+        fan_in = weight_shape[1]
+        fan_out = weight_shape[0]
+        w_bound = np.sqrt(6. / (fan_in + fan_out))
+        m.weight.data.uniform_(-w_bound, w_bound)
+        m.bias.data.fill_(0)
+
 class CNN(nn.Module):
     def __init__(self, input_size=31, num_classes=2):
         super(CNN, self).__init__()
@@ -50,6 +68,7 @@ class CNN(nn.Module):
         self.fc1 = nn.Linear(720 + input_size, 128)
         self.activate1 = nn.LeakyReLU()
         self.fc2 = nn.Linear(128, num_classes)
+        self.apply(weights_init)
 
     def forward(self, x, y):
         # Convolution
@@ -89,8 +108,10 @@ class DeepQLearner2(object):
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
         self.clip = clip
-        self.max_samples = 100
+        self.max_samples = 1000
         self.replay_sample = dyna_rate
+        self.counter = 0
+        self.update_rate = 20
         self.camera = camera
         self.learning_rate = learning_rate
         self.samples = []
@@ -105,8 +126,8 @@ class DeepQLearner2(object):
 
         # Loss and optimizer
         self.criterion = nn.MSELoss()
-        # self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=learning_rate)
-        self.optimizer = torch.optim.SGD(self.policy_net.parameters(), lr=learning_rate)
+        self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=learning_rate)
+        # self.optimizer = torch.optim.SGD(self.policy_net.parameters(), lr=learning_rate)
 
         # Load saved model
         self.save_path = save_path
@@ -142,8 +163,8 @@ class DeepQLearner2(object):
             else:
                 output = self.policy_net(torch.Tensor([s]).to(self.device))
             output_Q, output_action = torch.max(output.data, 1)
-            action = output_action[0].item()
-            return action
+            self.action = output_action[0].item() if self.epsilon < rand.random() else rand.randint(0, self.num_actions - 1)
+            return self.action
 
     def query(self,next_state,reward):
         """
@@ -154,9 +175,10 @@ class DeepQLearner2(object):
         """
         # add sample to array and pop if greater than max
         self.samples.append([self.state, self.action, next_state, reward])
+        self.counter = (self.counter + 1) % self.update_rate
         while len(self.samples) > self.max_samples:
-            self.samples.pop()
-        reward += 5 if not self.camera else 0
+            self.samples.pop(0)
+        # reward += 5 if not self.camera else 0
 
         # query target net for action and calculate expected reward
         self.policy_net.eval()
@@ -199,24 +221,28 @@ class DeepQLearner2(object):
         @summary: Runs dyna on saved samples
         @returns: The loss for the epoch
         """
-        if len(self.samples) < self.replay_sample:
+        if len(self.samples) < self.replay_sample or not self.counter == 0:
             return
         s_list = []
         a_list = []
         s_prime_list = []
         r_list = []
-        if self.camera:
-            s_state_list = []
-            s_prime_state_list = []
+        # if self.camera:
+        s_state_list = []
+        s_prime_state_list = []
         curr_samples = rand.sample(self.samples, self.replay_sample)
         for sample in curr_samples:
             [s, a, next_state, reward] = sample
             if self.camera:
-                s_list.append(s[0])
+                if type(s[0]) is int:
+                    s_list.append(torch.zeros(3, 96, 172).float()) # same shape as video producer in grammar demo xml file
+                    s_state_list.append(torch.Tensor(s).float())
+                else:
+                    s_list.append(torch.from_numpy(s[0].copy()).float()) 
+                    s_state_list.append(torch.Tensor(s[1]).float()) 
                 a_list.append(a)
                 s_prime_list.append(next_state[0])
                 r_list.append(reward)
-                s_state_list.append(s[1])
                 s_prime_state_list.append(next_state[1])
             else:
                 s_list.append(s)
@@ -241,26 +267,30 @@ class DeepQLearner2(object):
         self.policy_net.train()
         self.target_net.eval()
         if self.camera:
-            output = self.policy_net(torch.Tensor(s_list).to(self.device), torch.Tensor(s_state_list).to(self.device))
+            output = self.policy_net(torch.stack(s_list).to(self.device), torch.stack(s_state_list).to(self.device))
             next_output = self.target_net(torch.Tensor(s_prime_list).to(self.device), torch.Tensor(s_prime_state_list).to(self.device)) 
         else:
             output = self.policy_net(torch.Tensor(s_list).to(self.device))
             next_output = self.target_net(torch.Tensor(s_prime_list).to(self.device))
 
-        output_Q, output_action = torch.max(output.data, 1)
+        # print(output.shape)
+        # print(a_list)
+        # print(torch.Tensor(a_list).shape)
+        # output_Q, output_action = torch.max(output.data, 1)
+        output_Q = torch.gather(output, 1, torch.Tensor(a_list).unsqueeze(-1).type(torch.LongTensor))
 
         next_output_Q, next_output_action = torch.max(next_output.data, 1)
         expected_reward = torch.Tensor(r_list).to(self.device) + self.discount_factor * next_output_Q
         # label = torch.Tensor()
         # label.data = output.clone()
-        # for i in range(len(larintbel)):
-        #     label[i, a_list[i]] = expected_reward[i]
+        # for i in next_output_action:
+        # next_output[:, torch.Tensor(a_list)] = expected_reward
         # print(output.shape)
         # print(expected_reward.shape)
         # print(next_output.shape)
         # print(output_Q.shape)
-        loss = self.criterion(output_Q, expected_reward)
-        loss.requires_grad = True
+        loss = self.criterion(output_Q, expected_reward.unsqueeze(-1))
+        # loss.requires_grad = True
         self.optimizer.zero_grad()
         loss.backward()
         nn.utils.clip_grad_norm_(self.policy_net.parameters(), self.clip)
@@ -268,7 +298,8 @@ class DeepQLearner2(object):
         # print(loss.shape)
         self.losses.append(loss.item())
         for target_param, local_param in zip(self.target_net.parameters(), self.policy_net.parameters()):
-            target_param.data.copy_(0.001*local_param.data + 0.999*target_param.data)
+            # target_param.data.copy_(0.001*local_param.data + 0.999*target_param.data)
+            target_param.data.copy_(local_param.data)
         return loss.item()
 
     
@@ -311,23 +342,22 @@ class DeepQLearner2(object):
         plt.clf()
         prices_length = 10
         ravgs = [sum(self.losses[i:i+prices_length])/prices_length for i in range(len(self.losses)-prices_length+1)]
+        currentTime = datetime.now().strftime("%m%d_%H%M")
+        agentType = "CameraDQN" if self.camera else "DQN"
+        
         plt.plot(ravgs)
         plt.xlabel("Iteration Number")
         plt.ylabel("Average Loss")
         plt.title("Average of loss across " + str(prices_length) + " iterations")
         if self.verbose: plt.show()
-        if self.camera:
-            plt.savefig("./graphs/CameraDQN_Avg_Loss_graph.png")
-        else:
-            plt.savefig("./graphs/DQN_Avg_Loss_graph.png")
+        plt.savefig(f"./graphs/{agentType}_{currentTime}_Avg_Loss_Graph.png")
         plt.clf()
+        
         plt.plot(self.losses)
         plt.xlabel("Iteration Number")
         plt.ylabel("Loss")
         plt.title("Overall Loss")
         if self.verbose: plt.show()
-        if self.camera:
-            plt.savefig("./graphs/CameraDQN_Loss_graph.png")
-        else:
-            plt.savefig("./graphs/DQN_Loss_graph.png")
+        plt.savefig(f"./graphs/{agentType}_{currentTime}_Overall_Loss_Graph.png")
+        plt.clf()
 

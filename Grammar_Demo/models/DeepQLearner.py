@@ -139,8 +139,8 @@ class DeepQLearner(object):
             else:
                 output = self.policy_net(torch.Tensor([s]).to(self.device))
             output_Q, output_action = torch.max(output.data, 1)
-            action = output_action[0].item()
-            return action
+            self.action = output_action[0].item()
+            return self.action
 
     def query(self,next_state,reward):
         """
@@ -152,7 +152,7 @@ class DeepQLearner(object):
         # add sample to array and pop if greater than max
         self.samples.append([self.state, self.action, next_state, reward])
         while len(self.samples) > self.max_samples:
-            self.samples.pop()
+            self.samples.pop(0)
             # self.samples.remove(rand.choice(self.samples))
         reward += 5 if not self.camera else 0
 
