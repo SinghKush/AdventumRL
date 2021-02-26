@@ -231,10 +231,11 @@ class GrammarMission:
         plt.plot(cumulative_rewards)
         plt.xlabel("Iteration Number")
         plt.ylabel("Rewards")
-        plt.title("Rewards across " + str(len(cumulative_rewards)) + " iterations")
+        plt.title("Rewards across " + str(len(cumulative_rewards) - 1) + " iterations")
         if self.verbose: plt.show()
         currentTime = datetime.now().strftime("%m%d_%H%M")
-        plt.savefig(f"./graphs/{str(type(self.agent).__name__)}_{currentTime}_{len(cumulative_rewards)}_Iterations_Reward.png")
+        agentType = "CameraDQN" if "CameraDQN" in str(type(self.agent).__name__) else "DQN"
+        plt.savefig(f"./graphs/{agentType}_{currentTime}_{len(cumulative_rewards) - 1}_Iterations_Reward.png")
         plt.clf()
 
 
@@ -293,7 +294,8 @@ class GrammarMission:
             if self.verbose: print('\n Cumulative reward: %d' % cumulative_reward)
             cumulative_rewards += [ cumulative_reward ]
             if i % checkpoint_iter == 0:
-                self.agent.logOutput()
+                # if self.verbose:
+                # self.agent.logOutput()
                 self.plot_reward(cumulative_rewards)
                 if str(type(self.agent).__name__)!= "TabQAgent":
                     self.agent.learner.plot_loss()

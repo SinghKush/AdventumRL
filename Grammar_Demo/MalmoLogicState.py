@@ -213,12 +213,12 @@ class LogicalAgentHost(MalmoPython.AgentHost):
         return [action for action in self.state.all_applicable_actions()]
 
     def rewardValue(self):
-        if self.reward != 0 and self.verbose:
-            print("-----\nLOGICAL STATE CHANGE REWARD\n-----")
-        """if self.state.goalHeuristic() > self.pastHeuristic:
-            self.pastHeuristic = self.state.goalHeuristic()
-            self.reward += self.heuristicReward
-            print("-----\nHEURISTIC REWARD\n-----")"""
+        # if self.reward != 0 and self.verbose:
+        #     print("-----\nLOGICAL STATE CHANGE REWARD\n-----")
+        # if self.state.goalHeuristic() > self.pastHeuristic:
+        #     self.pastHeuristic = self.state.goalHeuristic()
+        #     self.reward += self.heuristicReward
+        #     print("-----\nHEURISTIC REWARD\n-----")
         reward = self.reward
         self.reward = 0
         return reward
