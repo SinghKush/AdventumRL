@@ -255,8 +255,9 @@ class LogicalAgentHost(MalmoPython.AgentHost):
 class LogicalAction(Action):
     def __init__(self, name, preconditions, postconditions, command, reward=0):
         super().__init__(name, preconditions, postconditions)
+        self.name = name
         self.command = command
         self.reward = reward
 
     def __str__(self):
-        return self.command
+        return self.name

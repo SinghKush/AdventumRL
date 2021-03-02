@@ -108,10 +108,10 @@ class DeepQLearner2(object):
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
         self.clip = clip
-        self.max_samples = 1000
+        self.max_samples = 2000
         self.replay_sample = dyna_rate
         self.counter = 0
-        self.update_rate = 20
+        self.update_rate = 10
         self.camera = camera
         self.learning_rate = learning_rate
         self.samples = []
@@ -126,8 +126,8 @@ class DeepQLearner2(object):
 
         # Loss and optimizer
         self.criterion = nn.MSELoss()
-        self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=learning_rate)
-        # self.optimizer = torch.optim.SGD(self.policy_net.parameters(), lr=learning_rate)
+        # self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=learning_rate)
+        self.optimizer = torch.optim.SGD(self.policy_net.parameters(), lr=learning_rate)
 
         # Load saved model
         self.save_path = save_path
@@ -230,6 +230,12 @@ class DeepQLearner2(object):
         # if self.camera:
         s_state_list = []
         s_prime_state_list = []
+
+        # probs = [np.exp(x[-1]) for x in self.samples]
+        # total = sum(probs)
+        # probs = [x / total for x in probs]
+        # sample_indices = np.random.choice(np.arange(len(probs)), self.replay_sample, p=probs, replace=False).tolist()
+        # curr_samples = [self.samples[i] for i in sample_indices]
         curr_samples = rand.sample(self.samples, self.replay_sample)
         for sample in curr_samples:
             [s, a, next_state, reward] = sample

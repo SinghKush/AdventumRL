@@ -27,7 +27,7 @@
         <!--<DrawItem type="apple" x="3" y="46" z="7"/>-->
         <DrawItem type="diamond" x="1" y="46" z="3"/>
       </DrawingDecorator>
-      <ServerQuitFromTimeUp timeLimitMs="200000"/>
+      <ServerQuitFromTimeUp timeLimitMs="100000" description="no-time"/>
       <ServerQuitWhenAnyAgentFinishes/>
     </ServerHandlers>
   </ServerSection>
@@ -43,22 +43,34 @@
       <MissionQuitCommands/>
       <ObservationFromFullStats/>
       <ObservationFromFullInventory flat="false"/>
+      <RewardForSendingCommand reward="-0.001" />
+      <!-- Added this so agent doesn't stick to one place and timeout -->
+      <RewardForMissionEnd>
+        <Reward description="no-time" reward="-1.0" />
+      </RewardForMissionEnd>
+      <!-- Added so agent exits properly -->
       <RewardForTouchingBlockType>
         <Block reward="-1" type="lava" behaviour="onceOnly"/>
-        <!-- <Block reward="0.05" type="redstone_block" behaviour="oncePerBlock"/>
-        <Block reward="0.3" type="diamond_block" behaviour="oncePerBlock"/>
-        <Block reward="0.2" type="lapis_block" behaviour="oncePerBlock"/> -->
       </RewardForTouchingBlockType>
+      <!-- Added this to push agent toward unlocking -->
+      <RewardForReachingPosition>
+        <Marker x="2"  y="45" z="9" reward="0.1" tolerance="0"/> 
+        <Marker x="2"  y="45" z="7" reward="0.1" tolerance="0.5"/> 
+        <Marker x="2"  y="45" z="8" reward="0.1" tolerance="0.5"/> 
+      </RewardForReachingPosition>
+      <!-- Added this to to cover key collection -->
+      <!-- Look into removing grab action -->
+      <RewardForCollectingItem>
+        <Item type="diamond" reward="0.5"/> 
+      </RewardForCollectingItem>
       <ObservationFromGrid>
           <Grid name="floor3x3">
             <min x="-1" y="-1" z="-1"/>
             <max x="1" y="-1" z="1"/>
           </Grid>
       </ObservationFromGrid>
-      <RewardForSendingCommand reward="-0.001" />
       <AgentQuitFromTouchingBlockType>
           <Block type="lava" />
-          <!--<Block type="lapis_block" />-->
       </AgentQuitFromTouchingBlockType>
       <!--<VideoProducer>
         <Width>860</Width>

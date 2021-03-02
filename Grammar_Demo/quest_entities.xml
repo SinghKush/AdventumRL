@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <Quest xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <Grid name="boundary1">
-      <min x="-99" y="-99" z="3"/>
-      <max x="1" y="99" z="3"/>
+      <min x="1" y="-99" z="2.5"/>
+      <max x="1.5" y="99" z="3.5"/>
     </Grid>
     <Grid name="boundary2">
-      <min x="2" y="-99" z="9"/>
-      <max x="2" y="99" z="99"/>
+      <min x="1.8" y="-99" z="8.8"/>
+      <max x="2.2" y="99" z="9"/>
     </Grid>
     <Grid name="boundary3">
-      <min x="4"  y="-99" z="6"/>
-      <max x="99" y="99" z="99"/>
+      <min x="3.5"  y="-99" z="5.5"/>
+      <max x="4.5" y="99" z="6.5"/>
     </Grid>
     <Grid name="world_bounds">
       <min x="-2"  y="-99" z="-2"/>
