@@ -314,10 +314,10 @@ class GrammarMission:
         return
 
 parser = argparse.ArgumentParser(description='Run missions in Malmo')
-parser.add_argument("--mission_file", help='choose which mission file to run', default='./grammar_demo.xml') 
-parser.add_argument("--quest_file", help='choose file to specify quest entities', default='./quest_entities.xml')
-parser.add_argument("--grammar_file", help='choose file to specify logical grammar', default="./quest_grammar.json")
-parser.add_argument("--agent", help='choose which agent to run (TabQAgent, DQNAgent, CameraDQNAgent)', default="TabQAgent")
+parser.add_argument("--mission_file", help='choose which mission file to run', default='./grammar_demo_3.xml') 
+parser.add_argument("--quest_file", help='choose file to specify quest entities', default='./quest_entities_3.xml')
+parser.add_argument("--grammar_file", help='choose file to specify logical grammar', default="./quest_grammar_3.json")
+parser.add_argument("--agent", help='choose which agent to run (TabQAgent, DQNAgent, CameraDQNAgent)', default="CameraDQNAgent")
 parser.add_argument("--repeats", help='How many times the agent is run (default=100)', type=int, default=100)
 parser.add_argument("--verbose", help='Provides more detailed info about the mission run', action='store_true', default=False)
 parser.add_argument("--no_training", help='Run the DQN agent without further training', action='store_true', default=False)

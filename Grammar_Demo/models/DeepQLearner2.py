@@ -132,10 +132,10 @@ class DeepQLearner2(object):
         # Load saved model
         self.save_path = save_path
 
-        # if load_path != None and os.path.exists(save_path):
-        #     checkpoint = torch.load(load_path, map_location=self.device)
-        #     self.target_net.load_state_dict(checkpoint['model_state_dict'])
-            # self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        if load_path != None and os.path.exists(save_path):
+            checkpoint = torch.load(load_path, map_location=self.device)
+            self.target_net.load_state_dict(checkpoint['model_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.target_net.eval()
 
         self.losses = []
@@ -337,10 +337,15 @@ class DeepQLearner2(object):
         self.samples = []
 
     def save(self):
+        currentTime = datetime.now().strftime("%m%d_%H%M%S")
+        agentType = "CameraDQN" if self.camera else "DQN"
+        save_path = f"cache/{agentType}_{currentTime}_model.pkl"
+        
         torch.save({
             'model_state_dict': self.policy_net.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
-            }, self.save_path)
+            }, save_path)
+        print(f"Saved Model At {currentTime}")
 
     def plot_loss(self):
         # print(len(self.losses))
@@ -350,7 +355,7 @@ class DeepQLearner2(object):
         ravgs = [sum(self.losses[i:i+prices_length])/prices_length for i in range(len(self.losses)-prices_length+1)]
         currentTime = datetime.now().strftime("%m%d_%H%M")
         agentType = "CameraDQN" if self.camera else "DQN"
-        
+
         plt.plot(ravgs)
         plt.xlabel("Iteration Number")
         plt.ylabel("Average Loss")

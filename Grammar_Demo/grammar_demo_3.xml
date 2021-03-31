@@ -43,25 +43,21 @@
       <MissionQuitCommands/>
       <ObservationFromFullStats/>
       <ObservationFromFullInventory flat="false"/>
-      <RewardForSendingCommand reward="-0.001" />
-      <!-- Added this so agent doesn't stick to one place and timeout -->
+      <RewardForSendingCommand reward="-0.1" /> <!-- Added this so agent doesn't stick to one place and timeout -->
       <RewardForMissionEnd>
-        <Reward description="no-time" reward="-1.0" />
+        <Reward description="no-time" reward="-30" /> <!-- Added so agent exits properly -->
       </RewardForMissionEnd>
-      <!-- Added so agent exits properly -->
       <RewardForTouchingBlockType>
-        <Block reward="-1" type="lava" behaviour="onceOnly"/>
+        <Block reward="-30" type="lava" behaviour="onceOnly"/>
       </RewardForTouchingBlockType>
       <!-- Added this to push agent toward unlocking -->
       <RewardForReachingPosition>
-        <Marker x="2"  y="45" z="9" reward="0.1" tolerance="0"/> 
-        <Marker x="2"  y="45" z="7" reward="0.1" tolerance="0.5"/> 
-        <Marker x="2"  y="45" z="8" reward="0.1" tolerance="0.5"/> 
+        <Marker x="2"  y="46" z="7" reward="2" tolerance="0.5"/>
       </RewardForReachingPosition>
       <!-- Added this to to cover key collection -->
       <!-- Look into removing grab action -->
       <RewardForCollectingItem>
-        <Item type="diamond" reward="0.5"/> 
+        <Item type="diamond" reward="5"/> 
       </RewardForCollectingItem>
       <ObservationFromGrid>
           <Grid name="floor3x3">

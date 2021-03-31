@@ -73,6 +73,7 @@ class CameraDQNAgent(Agent):
         self.logFile = 'CameraDQNAgent_Rewards-' + tstr + '.txt'
         self.lossFile = 'CameraDQNAgent_Losses-' + tstr + '.txt'
         self.saveSnapshots = True
+        self.maxReward = -1000
 
     def updateGrammar(self, agentHost):
         self.host = agentHost
@@ -281,7 +282,12 @@ class CameraDQNAgent(Agent):
         plt.ylabel("Rewards")
         plt.title("Running track of rewards")
         plt.savefig(f"./graphs/CameraDQNRunning.png")
-
+        if (len(self.cumulative_rewards) > 2):
+            if (self.cumulative_rewards[-1] > self.maxReward):
+                self.learner.save()
+                self.maxReward = self.cumulative_rewards[-1]
+                print(f"Saved Model with reward {self.cumulative_rewards[-1]}")
+                print()
         return total_reward
 
     def drawQ( self, curr_x=None, curr_y=None ):
