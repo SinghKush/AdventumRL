@@ -78,7 +78,7 @@
                     ]
                 }
             ],
-            "command": "reward 5",
+            "command": "reward 0",
             "reward": 5
         },
         {

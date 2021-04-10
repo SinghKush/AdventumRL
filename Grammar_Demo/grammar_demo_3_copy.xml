@@ -25,7 +25,7 @@
         <DrawBlock x="2"  y="45" z="11" type="gold_block" />
         <!--<DrawBlock type="chest" x="2" y="46" z="12"/>-->
         <!--<DrawItem type="apple" x="3" y="46" z="7"/>-->
-        <DrawItem type="diamond" x="1" y="46" z="3"/>
+        <DrawItem type="diamond" x="2" y="46" z="9"/>
       </DrawingDecorator>
       <ServerQuitFromTimeUp timeLimitMs="100000" description="no-time"/>
       <ServerQuitWhenAnyAgentFinishes/>
@@ -35,7 +35,7 @@
   <AgentSection mode="Survival">
     <Name>Cristina III</Name>
     <AgentStart>
-      <Placement x="3.5" y="46.0" z="1.5" pitch="30" yaw="0"/>
+      <Placement x="2.5" y="46.0" z="6.5" pitch="30" yaw="0"/>
     </AgentStart>
     <AgentHandlers>
       <DiscreteMovementCommands/>
@@ -52,8 +52,8 @@
       </RewardForTouchingBlockType>
       <!-- Added this to push agent toward unlocking -->
       <RewardForReachingPosition>
-        <Marker x="2.5"  y="46" z="8.5" reward="2" tolerance="0.5"/>
-        <Marker x="2.5"  y="46" z="7.5" reward="1" tolerance="0.5"/>
+        <Marker x="2.5"  y="46" z="8.5" reward="2" tolerance="0"/>
+        <Marker x="2.5"  y="46" z="7.5" reward="1" tolerance="0"/>
       </RewardForReachingPosition>
       <!-- Added this to to cover key collection -->
       <!-- Look into removing grab action -->

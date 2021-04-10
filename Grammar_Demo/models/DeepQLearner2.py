@@ -103,7 +103,6 @@ class DeepQLearner2(object):
         self.num_actions = num_actions
         self.state = [0] * input_size
         self.action = 0
-
         self.discount_factor = discount_factor
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
@@ -126,16 +125,16 @@ class DeepQLearner2(object):
 
         # Loss and optimizer
         self.criterion = nn.MSELoss()
-        # self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=learning_rate)
-        self.optimizer = torch.optim.SGD(self.policy_net.parameters(), lr=learning_rate)
+        self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=learning_rate)
+        # self.optimizer = torch.optim.SGD(self.policy_net.parameters(), lr=learning_rate)
 
         # Load saved model
         self.save_path = save_path
 
-        if load_path != None and os.path.exists(save_path):
-            checkpoint = torch.load(load_path, map_location=self.device)
-            self.target_net.load_state_dict(checkpoint['model_state_dict'])
-            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        # if load_path != None and os.path.exists(save_path):
+        #     checkpoint = torch.load(load_path, map_location=self.device)
+        #     self.target_net.load_state_dict(checkpoint['model_state_dict'])
+        #     self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.target_net.eval()
 
         self.losses = []
@@ -299,7 +298,16 @@ class DeepQLearner2(object):
         # loss.requires_grad = True
         self.optimizer.zero_grad()
         loss.backward()
+        # print("Before clip")
+        # for p in self.policy_net.parameters():
+        #     print(p.grad.norm())
+        # print()
         nn.utils.clip_grad_norm_(self.policy_net.parameters(), self.clip)
+        
+        # print("After clip")
+        # for p in self.policy_net.parameters():
+        #     print(p.grad.norm())
+        # print()
         self.optimizer.step()
         # print(loss.shape)
         self.losses.append(loss.item())

@@ -279,7 +279,7 @@ class GrammarMission:
                         exit(1)
                     else:
                         time.sleep(2.5)
-
+            
             if self.verbose: print("\n Waiting for the mission to start", end=' ')
             world_state = self.agent.host.getWorldState()
             while not world_state.has_mission_begun:

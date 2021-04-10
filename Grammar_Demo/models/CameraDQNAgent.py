@@ -45,14 +45,14 @@ class CameraDQNAgent(Agent):
 
         self.host = agentHost
         logicState = agentHost.state
-        self.move_actions = ["movenorth 1", "movesouth 1", "movewest 1", "moveeast 1"]
+        self.move_actions = ["movenorth 1", "moveeast 1", "movewest 1"]
         (x1, y1, z1), (x2, y2, z2) = logicState.world_bounds.roundPosition()
 
         # self.dyna_rate = 30
         self.learner = DeepQLearner2(
             input_size = 31,
             num_actions=len(self.move_actions) + len(logicState.actions),
-            discount_factor = 0.9, # 0.9
+            discount_factor = 0.95, # 0.9
             epsilon = 0.99, 
             epsilon_decay = 0.99,# 0.99
             learning_rate = 0.0005, # 0.0005
@@ -62,6 +62,9 @@ class CameraDQNAgent(Agent):
             save_path='cache/camera_dqn.pkl',
             camera=True,
             verbose=self.verbose)
+
+            # change actions to turn left/right
+            # reduce action space too
 
         # set vars for draw_QTable method
         self.canvas = None
@@ -107,8 +110,7 @@ class CameraDQNAgent(Agent):
         embedding = np.flip(embedding, -1)
         if self.saveSnapshots and self.verbose: # save image
             curr_hash = iHash.average_hash(Image.fromarray(embedding))
-            cv2.imwrite('./images/' + str(curr_hash) + '-' + str(self.counter) + '.jpg', embedding)
-            self.counter += 1
+            cv2.imwrite('./images/' + str(curr_hash) + '-' + time.strftime("%Y%m%d-%H%M%S") + '.jpg', embedding)
         embedding = np.moveaxis(embedding, -1, 0)
         return (embedding, state)
 
@@ -169,8 +171,8 @@ class CameraDQNAgent(Agent):
 
         current_state = self.host.state.getStateEmbedding() # param includePos=False deleted for method definition in MalmoLogicState.py
         logicalActions = self.host.state.getApplicableActions()
-        if len(logicalActions) > 0:
-            print(logicalActions[0])
+        # if len(logicalActions) > 0:
+        #     print(logicalActions[0])
         allActions = self.move_actions + logicalActions
         self.logger.debug("State: %s (x = %.2f, z = %.2f)" % (current_state, float(obs[u'XPos']), float(obs[u'ZPos'])))
         current_state = self.processFrame(frame.pixels, frame.width, frame.height, current_state)
@@ -184,7 +186,9 @@ class CameraDQNAgent(Agent):
             self.learner.run_dyna()
 
         if self.verbose: self.drawQ( curr_x = int(obs[u'XPos']), curr_y = int(obs[u'ZPos']) )
-
+        
+        # if action % len(allActions) > 3:
+            # print(allActions[action % len(allActions)])
         self.logger.info("Taking q action: %s" % allActions[action % len(allActions)])
 
         # try to send the selected action, only update prev_s if this succeeds

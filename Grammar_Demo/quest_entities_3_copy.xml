@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Quest xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Grid name="boundary1">
+      <min x="1.8" y="-99" z="8"/>
+      <max x="3.2" y="99" z="10"/>
+    </Grid>
+    <Grid name="boundary2">
+      <min x="1.8" y="-99" z="8"/>
+      <max x="3.2" y="99" z="10"/>
+    </Grid>
+    <Grid name="boundary3">
+      <min x="3.5"  y="-99" z="5"/>
+      <max x="5" y="99" z="7"/>
+    </Grid>
+    <Grid name="world_bounds">
+      <min x="-2"  y="-99" z="-2"/>
+      <max x="7" y="99" z="13"/>
+    </Grid>
+</Quest>

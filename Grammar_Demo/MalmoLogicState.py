@@ -22,6 +22,7 @@ class MalmoLogicState(State):
         self.varNames = [v.name for v in self.variables]
         self.relations = list(set([fact.name for fact in self.facts]))
 
+
     def copy(self):
         return MalmoLogicState(facts=self.facts, actions=self.actions, triggers=self.triggers, entities=self.entities, boundaries=self.boundaries, goal=self.goal)
 
@@ -36,7 +37,7 @@ class MalmoLogicState(State):
             return
 
         observation = json.loads(world_state.observations[-1].text)
-
+        
         # Clear all inventory propositions in world state
         oldInventoryProps = set()
         for fact in self.facts:
@@ -235,12 +236,16 @@ class LogicalAgentHost(MalmoPython.AgentHost):
         instruction = segments[0]
         if instruction == "movenorth":
             self.state.entities['player'].moveNorth(segments[1])
+            command = "move 1"
         elif instruction == "movesouth":
             self.state.entities['player'].moveSouth(segments[1])
+            command = "move -1"
         elif instruction == "moveeast":
-            self.state.entities['player'].moveEast(segments[1])
-        elif instruction == "movewest":
+            command = "turn 1"
             self.state.entities['player'].moveWest(segments[1])
+        elif instruction == "movewest":
+            command = "turn -1"
+            self.state.entities['player'].moveEast(segments[1])
         elif instruction == "discardCurrentItem":
             currentProp = self.state.currentInventoryItem()
             dx = cos(self.state.yaw)*cos(self.state.pitch)
