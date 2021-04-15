@@ -52,9 +52,10 @@ class CameraDQNAgent(Agent):
         self.learner = DeepQLearner2(
             input_size = 31,
             num_actions=len(self.move_actions) + len(logicState.actions),
-            discount_factor = 0.95, # 0.9
+            discount_factor = 0.9, # 0.9
             epsilon = 0.99, 
             epsilon_decay = 0.99,# 0.99
+            epsilon_min = 0.01, # 0.01
             learning_rate = 0.0005, # 0.0005
             dyna_rate = 50, 
             clip = 0.3,
@@ -62,9 +63,6 @@ class CameraDQNAgent(Agent):
             save_path='cache/camera_dqn.pkl',
             camera=True,
             verbose=self.verbose)
-
-            # change actions to turn left/right
-            # reduce action space too
 
         # set vars for draw_QTable method
         self.canvas = None
@@ -288,7 +286,8 @@ class CameraDQNAgent(Agent):
         plt.savefig(f"./graphs/CameraDQNRunning.png")
         if (len(self.cumulative_rewards) > 2):
             if (self.cumulative_rewards[-1] > self.maxReward):
-                self.learner.save()
+                # self.learner.save()
+                self.logOutput()
                 self.maxReward = self.cumulative_rewards[-1]
                 print(f"Saved Model with reward {self.cumulative_rewards[-1]}")
                 print()
@@ -344,7 +343,7 @@ class CameraDQNAgent(Agent):
         self.root.update()
 
     def logOutput(self):
-        # self.learner.save()
+        self.learner.save()
         with open(os.path.join('logs', self.logFile), 'w') as f:
             for item in self.cumulative_rewards:
                 f.write("%s\n" % item)

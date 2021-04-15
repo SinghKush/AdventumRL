@@ -79,7 +79,7 @@
                 }
             ],
             "command": "reward 0",
-            "reward": 5
+            "reward": 20
         },
         {
             "name": "unlock",
@@ -114,7 +114,7 @@
                 }
             ],
             "command": "discardCurrentItem",
-            "reward": 20
+            "reward": 100
         },
         {
             "name": "goal",
@@ -143,7 +143,7 @@
                 }
             ],
             "command": "quit",
-            "reward": 50
+            "reward": 200
         }
     ],
     "Goal": [

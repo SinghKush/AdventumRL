@@ -90,6 +90,7 @@ class DeepQLearner2(object):
         discount_factor = 0.9, \
         epsilon = 0.2, \
         epsilon_decay = 0.99, \
+        epsilon_min = 0.01, \
         clip = 1, \
         learning_rate = 0.0002, \
         dyna_rate = 10, \
@@ -106,8 +107,9 @@ class DeepQLearner2(object):
         self.discount_factor = discount_factor
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
+        self.epsilon_min = epsilon_min
         self.clip = clip
-        self.max_samples = 2000
+        self.max_samples = 5000
         self.replay_sample = dyna_rate
         self.counter = 0
         self.update_rate = 10
@@ -131,10 +133,10 @@ class DeepQLearner2(object):
         # Load saved model
         self.save_path = save_path
 
-        # if load_path != None and os.path.exists(save_path):
-        #     checkpoint = torch.load(load_path, map_location=self.device)
-        #     self.target_net.load_state_dict(checkpoint['model_state_dict'])
-        #     self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        if load_path != None and os.path.exists(save_path):
+            checkpoint = torch.load(load_path, map_location=self.device)
+            self.target_net.load_state_dict(checkpoint['model_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.target_net.eval()
 
         self.losses = []
@@ -144,6 +146,8 @@ class DeepQLearner2(object):
 
     def updateEps(self):
         self.epsilon *= self.epsilon_decay
+        if self.epsilon < self.epsilon_min:
+            self.epsilon = self.epsilon_min
         return
 
     def querysetstate(self, s):
