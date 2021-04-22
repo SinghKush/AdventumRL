@@ -112,7 +112,7 @@ class DeepQLearner2(object):
         self.max_samples = 5000
         self.replay_sample = dyna_rate
         self.counter = 0
-        self.update_rate = 10
+        self.update_rate = 5
         self.camera = camera
         self.learning_rate = learning_rate
         self.samples = []
@@ -127,8 +127,8 @@ class DeepQLearner2(object):
 
         # Loss and optimizer
         self.criterion = nn.MSELoss()
-        self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=learning_rate)
-        # self.optimizer = torch.optim.SGD(self.policy_net.parameters(), lr=learning_rate)
+        #self.optimizer = torch.optim.Adam(self.policy_net.parameters(), lr=learning_rate)
+        self.optimizer = torch.optim.SGD(self.policy_net.parameters(), lr=learning_rate)
 
         # Load saved model
         self.save_path = save_path
@@ -137,6 +137,7 @@ class DeepQLearner2(object):
             checkpoint = torch.load(load_path, map_location=self.device)
             self.target_net.load_state_dict(checkpoint['model_state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            print("Loaded Model!")
         self.target_net.eval()
 
         self.losses = []
@@ -258,11 +259,11 @@ class DeepQLearner2(object):
                 a_list.append(a)
                 s_prime_list.append(next_state)
                 r_list.append(reward)
-        sample_set = {}
-        for sample in reversed(self.samples):
-            sample_set[str(sample)] = sample
-        self.samples = list(sample_set.values())
-        self.samples.sort(key = lambda x: x[3])
+        # sample_set = {} Sorting for the samples commented out temporarily 
+        # for sample in reversed(self.samples):
+        #     sample_set[str(sample)] = sample
+        # self.samples = list(sample_set.values())
+        # self.samples.sort(key = lambda x: x[3])
 
         # self.policy_net.eval()
         # with torch.no_grad():

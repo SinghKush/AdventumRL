@@ -55,7 +55,7 @@ class CameraDQNAgent(Agent):
             discount_factor = 0.9, # 0.9
             epsilon = 0.99, 
             epsilon_decay = 0.99,# 0.99
-            epsilon_min = 0.01, # 0.01
+            epsilon_min = 0.2, # 0.01
             learning_rate = 0.0005, # 0.0005
             dyna_rate = 50, 
             clip = 0.3,

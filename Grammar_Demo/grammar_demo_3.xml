@@ -52,9 +52,11 @@
       </RewardForTouchingBlockType>
       <!-- Added this to push agent toward unlocking -->
       <RewardForReachingPosition>
-        <Marker x="2.5"  y="46" z="8.5" reward="5" tolerance="0.5"/>
-        <Marker x="2.5"  y="46" z="7.5" reward="2" tolerance="0.5"/>
-        <Marker x="4"  y="46" z="5" reward="5" tolerance="0.5"/>
+        <Marker x="2.5"  y="46" z="6.5" reward="2" tolerance="0.5"/>
+        <Marker x="2.5"  y="46" z="7.5" reward="5" tolerance="0.5"/>
+        <Marker x="4.5"  y="46" z="6.5" reward="5" tolerance="0.5"/>
+        <Marker x="3.5"  y="46" z="7.5" reward="2" tolerance="0.5"/>
+        <Marker x="3.5"  y="46" z="6.5" reward="3" tolerance="0.5"/>
       </RewardForReachingPosition>
       <!-- Added this to to cover key collection -->
       <!-- Look into removing grab action -->
